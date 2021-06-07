@@ -16,7 +16,7 @@ const bookSchema = mongoose.Schema({
     tags: String,
     image: {
         type: String,
-        default: "cover-default.jpg"
+        default: "https://i.imgur.com/rpVYMUX.jpeg"
     },
     created: {
         type: Date,

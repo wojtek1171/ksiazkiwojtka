@@ -25,5 +25,6 @@ router.get("/:id", API.fetchBookById);
 router.post("/", upload, API.createBook);
 router.patch("/:id", upload, API.updateBook);
 router.delete("/:id", API.deleteBook);
+router.post("/upload", upload, API.uploadCover);
 
 module.exports = router;

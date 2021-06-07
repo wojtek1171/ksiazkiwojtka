@@ -1,6 +1,7 @@
 const Book = require("../models/books");
 const Quote = require("../models/quotes");
 const fs = require("fs");
+const imgur = require("imgur");
 
 module.exports = class API {
   // fetch all books
@@ -27,8 +28,19 @@ module.exports = class API {
   // create a book
   static async createBook(req, res) {
     const book = req.body;
-    const imagename = req.file?.filename;
-    book.image = imagename;
+    const file = req.file;
+    let imagename = "";
+    if (file) {
+      try {
+        const url = await imgur.uploadFile("./uploads/" + file.filename);
+        imagename = url.link;
+        fs.unlinkSync("./uploads/" + file.filename);
+      } catch (err) {
+        console.log(err);
+      }
+      book.image = imagename;
+    }
+
     try {
       await Book.create(book);
       res.status(201).json({ message: "Book created succesfully." });
@@ -37,24 +49,47 @@ module.exports = class API {
     }
   }
 
+  //upload cover
+  static async uploadCover(req, res) {
+    const file = req.file;
+    try {
+      const url = await imgur.uploadFile("./uploads/" + file.filename);
+      const link = url.link;
+      res.status(200).json({ url: link });
+      fs.unlinkSync("./uploads/" + file.filename);
+      return link;
+    } catch (err) {
+      console.log(err);
+      res.status(400).json({ message: err.message });
+    }
+  }
+
   // update a book
   static async updateBook(req, res) {
     const id = req.params.id;
-    let newImage = "";
-    if (req.file) {
-      newImage = req.file.filename;
-      if (req.body.oldImage != "cover-default.jpg") {
-        try {
-          fs.unlinkSync("./uploads/" + req.body.oldImage);
-        } catch (err) {
-          console.log(err);
-        }
-      }
-    } else {
-      newImage = req.body.oldImage;
-    }
     const newBook = req.body;
-    newBook.image = newImage;
+    let newImage = "";
+    const file = req.file;
+
+    if (file) {
+      try {
+        const url = await imgur.uploadFile("./uploads/" + file.filename);
+        newImage = url.link;
+        fs.unlinkSync("./uploads/" + file.filename);
+      } catch (err) {
+        console.log(err);
+      }
+      newBook.image = newImage;
+    }
+    // if (req.file) {
+    //   if (req.body.oldImage != "cover-default.jpg") {
+    //     try {
+    //       //fs.unlinkSync("./uploads/" + req.body.oldImage);
+    //     } catch (err) {
+    //       console.log(err);
+    //     }
+    //   }
+    // }
 
     try {
       await Book.findByIdAndUpdate(id, newBook);
